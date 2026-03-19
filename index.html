@@ -1,1895 +1,441 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Lions Gate Credential Infrastructure</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
-<style>
-:root {
-  --gold: #c9a24d;
-  --gold-light: #e8d5a3;
-  --gold-dark: #8a6d2f;
-  --dark: #0b0b0d;
-  --card: #111218;
-  --card-light: #1a1a22;
-  --line: #2a2a30;
-  --text: #eaeaea;
-  --text-muted: #7a7a85;
-  --green: #4ade80;
-  --green-bg: rgba(74, 222, 128, 0.12);
-  --red: #ff6b6b;
-  --red-bg: rgba(255, 107, 107, 0.12);
-  --orange: #f59e0b;
-  --orange-bg: rgba(245, 158, 11, 0.12);
-  --blue: #60a5fa;
-}
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: 'Manrope', sans-serif;
-  background: linear-gradient(165deg, #06060a 0%, #0d0d14 50%, #080810 100%);
-  color: var(--text);
-  min-height: 100vh;
-}
-
-.hidden { display: none !important; }
-
-/* Animations */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(24px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeInScale {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
-
-@keyframes holoShift {
-  0%, 100% { filter: hue-rotate(0deg) brightness(1); }
-  25% { filter: hue-rotate(15deg) brightness(1.1); }
-  50% { filter: hue-rotate(-10deg) brightness(1); }
-  75% { filter: hue-rotate(20deg) brightness(1.05); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0) rotateX(2deg) rotateY(-1deg); }
-  50% { transform: translateY(-10px) rotateX(-1deg) rotateY(2deg); }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-@keyframes gradientMove {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-@keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100%); }
-}
-
-/* ========== LOGIN SCREEN ========== */
-#loginScreen {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  position: relative;
-  overflow: hidden;
-}
-
-#loginScreen::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background:
-    radial-gradient(ellipse at 20% 20%, rgba(201, 162, 77, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 80%, rgba(201, 162, 77, 0.04) 0%, transparent 40%),
-    radial-gradient(ellipse at 50% 50%, rgba(96, 165, 250, 0.02) 0%, transparent 60%);
-  animation: pulse 10s ease-in-out infinite;
-}
-
-.login-container {
-  width: 420px;
-  max-width: 100%;
-  position: relative;
-  z-index: 1;
-  animation: fadeInScale 0.8s ease;
-}
-
-.login-card {
-  background: linear-gradient(180deg, rgba(17, 18, 24, 0.95) 0%, rgba(11, 11, 13, 0.98) 100%);
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  padding: 40px 36px;
-  backdrop-filter: blur(20px);
-  box-shadow:
-    0 40px 80px rgba(0,0,0,0.5),
-    0 0 0 1px rgba(255,255,255,0.03) inset;
-}
-
-.login-logo {
-  width: 90px;
-  height: 90px;
-  margin: 0 auto 24px;
-  background: linear-gradient(145deg, var(--gold), var(--gold-dark));
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow:
-    0 15px 50px rgba(201, 162, 77, 0.35),
-    0 0 0 4px rgba(201, 162, 77, 0.1);
-  position: relative;
-}
-
-.login-logo::after {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  border: 1px solid rgba(201, 162, 77, 0.3);
-}
-
-.login-logo i {
-  font-size: 38px;
-  color: #000;
-}
-
-.login-card h2 {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 2.2rem;
-  letter-spacing: 5px;
-  text-align: center;
-  margin-bottom: 6px;
-  background: linear-gradient(135deg, var(--gold), var(--gold-light));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.login-card .subtitle {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 13px;
-  letter-spacing: 1px;
-  margin-bottom: 32px;
-}
-
-.login-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--line), transparent);
-  margin: 28px 0;
-}
-
-.input-group {
-  position: relative;
-  margin-bottom: 16px;
-}
-
-.input-group label {
-  display: block;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: var(--text-muted);
-  margin-bottom: 8px;
-}
-
-.input-group i {
-  position: absolute;
-  left: 16px;
-  bottom: 16px;
-  color: var(--text-muted);
-  font-size: 16px;
-  transition: color 0.3s;
-}
-
-.input-group input {
-  width: 100%;
-  padding: 16px 16px 16px 48px;
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  background: rgba(0,0,0,0.4);
-  color: var(--text);
-  font-size: 16px;
-  font-family: 'IBM Plex Mono', monospace;
-  font-weight: 500;
-  letter-spacing: 2px;
-  transition: all 0.3s;
-}
-
-.input-group input:focus {
-  outline: none;
-  border-color: var(--gold);
-  box-shadow: 0 0 0 4px rgba(201, 162, 77, 0.15);
-}
-
-.input-group input:focus + i,
-.input-group input:focus ~ i {
-  color: var(--gold);
-}
-
-.input-group input::placeholder {
-  color: var(--text-muted);
-  font-family: 'Manrope', sans-serif;
-  letter-spacing: 0;
-}
-
-.btn-login {
-  width: 100%;
-  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-  color: #000;
-  font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 1px;
-  border: none;
-  padding: 18px;
-  border-radius: 14px;
-  cursor: pointer;
-  margin-top: 8px;
-  transition: all 0.3s;
-  font-family: 'Manrope', sans-serif;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
-.btn-login:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(201, 162, 77, 0.4);
-}
-
-.btn-login:active {
-  transform: translateY(0);
-}
-
-.login-error {
-  background: var(--red-bg);
-  border: 1px solid rgba(255, 107, 107, 0.3);
-  color: var(--red);
-  padding: 14px 16px;
-  border-radius: 12px;
-  margin-top: 16px;
-  font-size: 13px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.login-footer {
-  text-align: center;
-  margin-top: 24px;
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-/* ========== VERIFICATION PAGE ========== */
-#verificationPage {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: linear-gradient(165deg, #06060a 0%, #0d0d14 50%, #080810 100%);
-}
-
-.verification-card {
-  width: 500px;
-  max-width: 100%;
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 24px;
-  padding: 40px;
-  text-align: center;
-  animation: fadeInScale 0.6s ease;
-}
-
-.verification-icon {
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 24px;
-  background: var(--green-bg);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid rgba(74, 222, 128, 0.3);
-}
-
-.verification-icon i {
-  font-size: 36px;
-  color: var(--green);
-}
-
-.verification-card h2 {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.8rem;
-  letter-spacing: 3px;
-  color: var(--green);
-  margin-bottom: 8px;
-}
-
-.verification-card .verified-label {
-  color: var(--text-muted);
-  font-size: 13px;
-  margin-bottom: 28px;
-}
-
-.verification-details {
-  background: rgba(0,0,0,0.3);
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 24px;
-  text-align: left;
-}
-
-.verification-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--line);
-}
-
-.verification-row:last-child {
-  border-bottom: none;
-}
-
-.verification-row label {
-  font-size: 12px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.verification-row span {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.verification-row .status-active {
-  color: var(--green);
-}
-
-.verification-row .status-pending {
-  color: var(--orange);
-}
-
-.verification-timestamp {
-  margin-top: 24px;
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-/* ========== MAIN PORTAL ========== */
-.container {
-  max-width: 1200px;
-  margin: auto;
-  padding: 40px 20px;
-}
-
-/* Header */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
-  animation: fadeIn 0.6s ease;
-}
-
-.logo {
-  cursor: pointer;
-  user-select: none;
-}
-
-.logo h1 {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 2.4rem;
-  letter-spacing: 5px;
-  background: linear-gradient(135deg, var(--gold), var(--gold-light));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.logo small {
-  color: var(--text-muted);
-  font-size: 11px;
-  letter-spacing: 3px;
-}
-
-.header-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.icon-btn {
-  width: 46px;
-  height: 46px;
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  background: var(--card);
-  color: var(--text);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.25s;
-}
-
-.icon-btn:hover {
-  border-color: var(--gold);
-  color: var(--gold);
-  background: rgba(201, 162, 77, 0.08);
-}
-
-/* Cards */
-.card {
-  background: linear-gradient(180deg, var(--card) 0%, rgba(11, 11, 13, 0.8) 100%);
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  padding: 32px;
-  margin-bottom: 28px;
-  animation: fadeIn 0.6s ease backwards;
-  position: relative;
-  overflow: hidden;
-}
-
-.card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
-}
-
-.card:nth-child(2) { animation-delay: 0.1s; }
-.card:nth-child(3) { animation-delay: 0.2s; }
-.card:nth-child(4) { animation-delay: 0.3s; }
-
-.card h3 {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.25rem;
-  letter-spacing: 3px;
-  color: var(--gold);
-  margin-bottom: 24px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-/* Profile Section */
-.profile-section {
-  display: grid;
-  grid-template-columns: 170px 1fr;
-  gap: 32px;
-  align-items: start;
-}
-
-.profile-photo {
-  width: 170px;
-  height: 210px;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 3px solid var(--line);
-  box-shadow:
-    0 20px 60px rgba(0,0,0,0.5),
-    0 0 0 1px rgba(255,255,255,0.05) inset;
-  position: relative;
-  background: #1a1a22;
-}
-
-.profile-photo::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.6) 100%);
-  pointer-events: none;
-}
-
-.profile-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center top;
-}
-
-.profile-details {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 14px;
-}
-
-.profile-item {
-  padding: 18px;
-  background: rgba(255,255,255,0.015);
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  transition: all 0.25s;
-}
-
-.profile-item:hover {
-  border-color: rgba(201, 162, 77, 0.25);
-  background: rgba(201, 162, 77, 0.02);
-}
-
-.profile-item label {
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: var(--text-muted);
-  display: block;
-  margin-bottom: 8px;
-}
-
-.profile-item span {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.profile-item a {
-  color: var(--blue);
-  text-decoration: none;
-}
-
-.profile-item a:hover {
-  text-decoration: underline;
-}
-
-.profile-item.wide {
-  grid-column: span 2;
-}
-
-/* Status */
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-
-.status i { font-size: 7px; animation: pulse 2s infinite; }
-
-.active {
-  background: var(--green-bg);
-  color: var(--green);
-  border: 1px solid rgba(74, 222, 128, 0.25);
-}
-
-.inactive {
-  background: var(--orange-bg);
-  color: var(--orange);
-  border: 1px solid rgba(245, 158, 11, 0.25);
-}
-
-.suspended {
-  background: var(--red-bg);
-  color: var(--red);
-  border: 1px solid rgba(255, 107, 107, 0.25);
-}
-
-/* Credential Info Box */
-.credential-info {
-  margin-top: 24px;
-  padding: 20px;
-  background: rgba(0,0,0,0.35);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-}
-
-.credential-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-}
-
-.credential-row:last-child { border-bottom: none; }
-
-.credential-row label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--text-muted);
-}
-
-.credential-row span {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
-  color: var(--text);
-}
-
-.credential-row .hash {
-  max-width: 300px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--gold);
-}
-
-/* ========== REALISTIC BADGE CARDS ========== */
-.badge-container {
-  display: flex;
-  gap: 36px;
-  flex-wrap: wrap;
-  justify-content: center;
-  perspective: 2000px;
-  padding: 30px 0;
-}
-
-.badge {
-  width: 320px;
-  height: 500px;
-  background:
-    linear-gradient(165deg,
-      rgba(70, 70, 80, 0.9) 0%,
-      rgba(45, 45, 55, 0.95) 20%,
-      rgba(35, 35, 42, 0.98) 50%,
-      rgba(28, 28, 34, 1) 80%,
-      rgba(22, 22, 28, 1) 100%
-    );
-  border-radius: 18px;
-  position: relative;
-  overflow: hidden;
-  box-shadow:
-    0 50px 100px rgba(0,0,0,0.7),
-    0 20px 40px rgba(0,0,0,0.5),
-    0 0 0 1px rgba(255,255,255,0.1) inset,
-    0 2px 0 rgba(255,255,255,0.15) inset;
-  animation: float 8s ease-in-out infinite;
-  transform-style: preserve-3d;
-}
-
-.badge:nth-child(2) {
-  animation-delay: -4s;
-}
-
-/* Texture overlay for realism */
-.badge::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%' height='100%' filter='url(%23noise)'/%3E%3C/svg%3E");
-  opacity: 0.03;
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* Lanyard clip slot */
-.badge::after {
-  content: '';
-  position: absolute;
-  top: -3px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 50px;
-  height: 24px;
-  background: linear-gradient(180deg, #3a3a44 0%, #28282f 100%);
-  border-radius: 0 0 10px 10px;
-  box-shadow:
-    0 2px 8px rgba(0,0,0,0.4),
-    0 0 0 1px rgba(255,255,255,0.08) inset;
-  z-index: 20;
-}
-
-/* Holographic Security Strip */
-.holo-strip {
-  position: absolute;
-  right: 18px;
-  top: 35px;
-  bottom: 55px;
-  width: 32px;
-  background: linear-gradient(180deg,
-    #ff6b9d 0%,
-    #ff8866 8%,
-    #c44dff 16%,
-    #4d9fff 24%,
-    #4dffc4 32%,
-    #ffe34d 40%,
-    #ff6b6b 48%,
-    #ff6b9d 56%,
-    #c44dff 64%,
-    #4d9fff 72%,
-    #4dffc4 80%,
-    #ffe34d 88%,
-    #ff6b9d 100%
-  );
-  background-size: 100% 300%;
-  animation: shimmer 6s linear infinite, holoShift 8s ease-in-out infinite;
-  opacity: 0.95;
-  border-radius: 4px;
-  z-index: 5;
-  box-shadow: 0 0 20px rgba(255, 107, 157, 0.2);
-}
-
-.holo-strip::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background:
-    repeating-linear-gradient(0deg,
-      transparent 0px,
-      rgba(255,255,255,0.2) 1px,
-      transparent 2px,
-      transparent 5px
-    ),
-    repeating-linear-gradient(90deg,
-      transparent 0px,
-      rgba(0,0,0,0.15) 1px,
-      transparent 2px
-    );
-  background-size: 100% 5px, 3px 100%;
-}
-
-/* Security pattern watermarks */
-.holo-strip::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    repeating-linear-gradient(
-      45deg,
-      transparent 0px,
-      transparent 8px,
-      rgba(0,0,0,0.1) 8px,
-      rgba(0,0,0,0.1) 9px
-    );
-  opacity: 0.5;
-}
-
-/* Badge Inner Content */
-.badge-inner {
-  padding: 40px 22px 24px;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  z-index: 3;
-}
-
-/* Photo Frame - Realistic */
-.badge-front .photo-frame {
-  width: 145px;
-  height: 175px;
-  background: linear-gradient(145deg, #252530, #1a1a22);
-  border-radius: 10px;
-  overflow: hidden;
-  border: 2px solid rgba(255,255,255,0.12);
-  box-shadow:
-    0 12px 35px rgba(0,0,0,0.5),
-    0 0 0 1px rgba(0,0,0,0.3) inset;
-  position: relative;
-}
-
-.badge-front .photo-frame::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%);
-  pointer-events: none;
-  z-index: 2;
-}
-
-.badge-front .photo-frame img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center 15%;
-  filter: contrast(1.02) saturate(1.05);
-}
-
-.badge-front .member-name {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 38px;
-  letter-spacing: 2px;
-  line-height: 0.95;
-  margin: 18px 0 0;
-  text-shadow: 0 3px 6px rgba(0,0,0,0.4);
-  color: #fff;
-}
-
-.badge-front .tier-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  margin: 10px 0;
-  padding: 6px 12px;
-  background: rgba(201, 162, 77, 0.15);
-  border: 1px solid rgba(201, 162, 77, 0.3);
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--gold-light);
-}
-
-.badge-front .tier-badge .stars {
-  color: var(--gold);
-  letter-spacing: 1px;
-}
-
-.badge-front .tag-id {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 22px;
-  font-weight: 600;
-  letter-spacing: 5px;
-  margin-top: auto;
-  color: #fff;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-}
-
-.badge-front .footer-text {
-  font-size: 7px;
-  color: rgba(255,255,255,0.4);
-  letter-spacing: 3px;
-  padding-top: 14px;
-  margin-top: 16px;
-  border-top: 1px solid rgba(255,255,255,0.08);
-  text-transform: uppercase;
-}
-
-/* Lion Emblem */
-.lion-emblem {
-  position: absolute;
-  right: 60px;
-  bottom: 75px;
-  width: 65px;
-  height: 65px;
-  background: rgba(255,255,255,0.04);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid rgba(255,255,255,0.08);
-  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-}
-
-.lion-emblem i {
-  font-size: 28px;
-  opacity: 0.25;
-  color: #fff;
-}
-
-/* ===== BACK BADGE ===== */
-.badge-back .holo-bottom {
-  position: absolute;
-  bottom: 40px;
-  left: 22px;
-  right: 22px;
-  height: 12px;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    #ff6b9d 3%,
-    #c44dff 15%,
-    #4d9fff 30%,
-    #4dffc4 45%,
-    #ffe34d 60%,
-    #ff6b9d 75%,
-    #c44dff 90%,
-    transparent 100%
-  );
-  background-size: 250% 100%;
-  animation: shimmer 4s linear infinite;
-  opacity: 0.85;
-  border-radius: 3px;
-  z-index: 5;
-}
-
-.badge-back .badge-header {
-  text-align: center;
-  padding-bottom: 18px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-.badge-back .badge-header h2 {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 26px;
-  letter-spacing: 6px;
-  color: #fff;
-}
-
-.badge-back .badge-header .tier {
-  color: var(--text-muted);
-  font-size: 14px;
-  margin-top: 4px;
-}
-
-.badge-back .section-title {
-  font-size: 8px;
-  letter-spacing: 2px;
-  color: var(--text-muted);
-  margin: 18px 0 10px;
-  text-transform: uppercase;
-}
-
-.badge-back .contact-info {
-  font-size: 12px;
-  line-height: 1.5;
-  color: rgba(255,255,255,0.85);
-}
-
-.badge-back .contact-info strong {
-  display: block;
-  font-size: 15px;
-  margin-bottom: 4px;
-  color: #fff;
-}
-
-.badge-back .tag-center {
-  text-align: center;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: 4px;
-  padding: 14px 0;
-  border-top: 1px solid rgba(255,255,255,0.08);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  margin: 14px 0;
-  color: #fff;
-}
-
-.badge-back .code-section {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 12px;
-  background: #fff;
-  border-radius: 10px;
-  margin: 12px 0;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-
-.badge-back .barcode-container {
-  flex: 1;
-}
-
-.badge-back .barcode {
-  height: 36px;
-  display: flex;
-  gap: 1px;
-}
-
-.badge-back .barcode span {
-  background: #000;
-  flex: 1;
-  max-width: 3px;
-}
-
-.badge-back .barcode-num {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 9px;
-  color: #000;
-  text-align: center;
-  margin-top: 4px;
-  letter-spacing: 1px;
-}
-
-.badge-back .qr-small {
-  width: 50px;
-  height: 50px;
-  flex-shrink: 0;
-}
-
-.badge-back .corp-info {
-  font-size: 10px;
-  color: var(--text-muted);
-  line-height: 1.4;
-  text-align: center;
-  margin-top: auto;
-}
-
-.badge-back .corp-info strong {
-  display: block;
-  color: rgba(255,255,255,0.8);
-  font-size: 11px;
-  margin-bottom: 4px;
-  letter-spacing: 1px;
-}
-
-/* Buttons */
-.btn {
-  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-  border: none;
-  padding: 15px 26px;
-  border-radius: 14px;
-  font-weight: 700;
-  font-size: 13px;
-  cursor: pointer;
-  color: #000;
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  transition: all 0.25s;
-  font-family: 'Manrope', sans-serif;
-  letter-spacing: 0.3px;
-}
-
-.btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(201, 162, 77, 0.35);
-}
-
-.btn-group {
-  display: flex;
-  gap: 14px;
-  flex-wrap: wrap;
-  margin-top: 28px;
-}
-
-.btn-secondary {
-  background: transparent;
-  border: 1px solid var(--line);
-  color: var(--text);
-}
-
-.btn-secondary:hover {
-  border-color: var(--gold);
-  background: rgba(201, 162, 77, 0.08);
-}
-
-/* QR Section */
-.qr-section {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 32px;
-  flex-wrap: wrap;
-}
-
-.qr-box {
-  background: #fff;
-  padding: 16px;
-  border-radius: 16px;
-  box-shadow: 0 15px 50px rgba(0,0,0,0.35);
-}
-
-/* Specs Grid */
-.specs-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 14px;
-}
-
-.spec-item {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 18px;
-  background: rgba(255,255,255,0.02);
-  border-radius: 14px;
-  border: 1px solid var(--line);
-  transition: all 0.25s;
-}
-
-.spec-item:hover {
-  border-color: rgba(201, 162, 77, 0.25);
-}
-
-.spec-item i {
-  color: var(--gold);
-  font-size: 18px;
-  width: 26px;
-  text-align: center;
-}
-
-.spec-item span {
-  font-size: 12px;
-}
-
-/* Modal */
-.modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.92);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 20px;
-  animation: fadeIn 0.25s ease;
-}
-
-.modal-box {
-  background: var(--card);
-  border: 1px solid var(--line);
-  padding: 36px;
-  border-radius: 22px;
-  width: 420px;
-  max-width: 100%;
-}
-
-.modal-box h3 {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.5rem;
-  letter-spacing: 3px;
-  margin-bottom: 28px;
-  text-align: center;
-  color: var(--gold);
-}
-
-.modal-box input,
-.modal-box select {
-  width: 100%;
-  padding: 16px;
-  border-radius: 12px;
-  background: rgba(0,0,0,0.4);
-  border: 1px solid var(--line);
-  color: var(--text);
-  font-size: 16px;
-  margin-bottom: 14px;
-  font-family: 'IBM Plex Mono', monospace;
-}
-
-.modal-box input:focus,
-.modal-box select:focus {
-  outline: none;
-  border-color: var(--gold);
-}
-
-.modal-box label {
-  font-size: 9px;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: var(--text-muted);
-  display: block;
-  margin-bottom: 8px;
-}
-
-.modal-box .btn-group {
-  justify-content: center;
-}
-
-/* Footer */
-footer {
-  text-align: center;
-  padding: 45px 20px;
-  color: var(--text-muted);
-  font-size: 11px;
-  border-top: 1px solid var(--line);
-  margin-top: 45px;
-}
-
-footer .logo-text {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 18px;
-  letter-spacing: 6px;
-  color: var(--gold);
-  margin-bottom: 10px;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .profile-section {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    text-align: center;
-  }
-
-  .profile-item.wide { grid-column: span 1; }
-
-  .badge {
-    width: 300px;
-    height: 470px;
-  }
-
-  .header {
-    flex-direction: column;
-    gap: 20px;
-    text-align: center;
-  }
-
-  .qr-section { justify-content: center; }
-
-  .credential-row {
-    flex-direction: column;
-    gap: 6px;
-    align-items: flex-start;
-  }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lions Gate · Diamond Platinum Portal</title>
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Bootstrap for accessible grid and utilities -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Three.js for 3D background & interaction -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --gold-primary: #d4af37;
+            --gold-light: #f9e076;
+            --gold-dark: #a5852b;
+            --bg-dark: #050508;
+            --panel-bg: rgba(18, 18, 28, 0.85);
+            --text-light: #f0f0f0;
+            --error-red: #ff4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { overflow-x: hidden; background: var(--bg-dark); color: var(--text-light); }
+        
+        /* Accessibility focus rings */
+        button:focus-visible, input:focus-visible {
+            outline: 2px solid var(--gold-light);
+            outline-offset: 2px;
+        }
+
+        canvas#bg-canvas { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; }
+        .portal-wrapper { position: relative; z-index: 10; min-height: 100vh; backdrop-filter: blur(8px); }
+        
+        .glass-panel { 
+            background: var(--panel-bg); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid rgba(212, 175, 55, 0.2); 
+            border-radius: 24px; 
+            box-shadow: 0 24px 48px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.1); 
+        }
+        
+        .gold-text { color: var(--gold-primary); font-weight: 600; letter-spacing: 0.5px; }
+        .playfair { font-family: 'Playfair Display', serif; }
+        
+        .btn-gold { 
+            background: linear-gradient(145deg, var(--gold-dark), var(--gold-primary)); 
+            border: none; 
+            color: #000; 
+            font-weight: 700; 
+            padding: 12px 28px; 
+            border-radius: 40px; 
+            transition: all 0.3s ease; 
+            box-shadow: 0 8px 20px rgba(212,175,55,0.2); 
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(212,175,55,0.4); cursor: pointer; color: #000; }
+        
+        .btn-outline-gold { 
+            background: rgba(212,175,55,0.05); 
+            border: 1.5px solid var(--gold-primary); 
+            color: var(--gold-primary); 
+            padding: 10px 24px; 
+            border-radius: 40px; 
+            font-weight: 600; 
+            transition: all 0.3s ease; 
+        }
+        .btn-outline-gold:hover { background: rgba(212,175,55,0.15); color: var(--gold-light); cursor: pointer; }
+        
+        .badge-diamond { 
+            background: linear-gradient(135deg, #2a2a3a, #1a1a28); 
+            border-left: 4px solid var(--gold-primary); 
+            padding: 6px 16px; 
+            border-radius: 40px; 
+            font-size: 0.85rem; 
+            font-weight: 600; 
+            color: var(--gold-primary); 
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        input[type="text"] { 
+            background: rgba(0,0,0,0.5); 
+            border: 1px solid rgba(212, 175, 55, 0.3); 
+            border-radius: 12px; 
+            padding: 16px 20px; 
+            color: white; 
+            width: 100%; 
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+        input[type="text"]:focus { outline: none; border-color: var(--gold-primary); background: rgba(0,0,0,0.8); box-shadow: 0 0 15px rgba(212,175,55,0.2); }
+        
+        /* Initial Lock Overlay */
+        .lock-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            backdrop-filter: blur(15px); background: rgba(5, 5, 8, 0.95);
+            z-index: 1000; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; padding: 20px;
+        }
+        
+        .auth-container {
+            max-width: 480px; width: 100%; padding: 40px;
+            border-radius: 24px; background: var(--panel-bg);
+            border: 1px solid rgba(212, 175, 55, 0.4);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.9);
+            position: relative; overflow: hidden;
+        }
+        
+        /* Inescapable Activation Overlay */
+        .activation-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 5, 8, 0.98); backdrop-filter: blur(20px);
+            z-index: 9999; display: none; flex-direction: column;
+            overflow-y: auto; padding: 3rem 2rem;
+        }
+        .activation-overlay.active { display: flex; }
+        
+        .activation-header { text-align: center; margin-bottom: 3rem; }
+        .activation-title {
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            background: linear-gradient(to right, var(--gold-dark), var(--gold-light), var(--gold-dark));
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            margin-bottom: 1rem; letter-spacing: 3px;
+        }
+        
+        .activation-action-box {
+            background: rgba(20, 20, 30, 0.8);
+            border: 2px solid var(--gold-primary);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 600px;
+            margin: 0 auto 4rem auto;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(212, 175, 55, 0.15);
+        }
+
+        .error-message {
+            color: var(--error-red);
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid var(--error-red);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+            font-weight: 500;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        .activation-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px; max-width: 1200px; margin: 0 auto; width: 100%;
+        }
+        
+        .activation-card {
+            background: rgba(26, 26, 40, 0.5); border-radius: 20px;
+            padding: 30px; border: 1px solid rgba(212, 175, 55, 0.2);
+            transition: all 0.3s ease;
+        }
+        .activation-card:hover { transform: translateY(-5px); border-color: rgba(212, 175, 55, 0.5); }
+        
+        .card-icon {
+            width: 70px; height: 70px; border-radius: 50%;
+            background: rgba(212, 175, 55, 0.1); display: flex;
+            align-items: center; justify-content: center;
+            margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.3);
+            font-size: 1.8rem; color: var(--gold-primary);
+        }
+        
+        .benefit-list { list-style: none; padding: 0; }
+        .benefit-list li {
+            padding: 12px 0 12px 30px; position: relative;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.8);
+        }
+        .benefit-list li:last-child { border-bottom: none; }
+        .benefit-list li::before {
+            content: '\f00c'; font-family: 'Font Awesome 5 Free'; font-weight: 900;
+            position: absolute; left: 0; top: 12px; color: var(--gold-primary);
+        }
+
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+            70% { transform: scale(1.02); box-shadow: 0 0 0 15px rgba(212, 175, 55, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+        }
+
+        .toast-message {
+            position: fixed; bottom: 30px; right: 30px;
+            background: var(--panel-bg); border-left: 6px solid var(--gold-primary);
+            padding: 16px 24px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            z-index: 10000; animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    </style>
 </head>
-
 <body>
-
-<!-- ========== LOGIN SCREEN ========== -->
-<div id="loginScreen">
-  <div class="login-container">
-    <div class="login-card">
-      <div class="login-logo">
-        <i class="fas fa-shield-halved"></i>
-      </div>
-      <h2>LIONS GATE</h2>
-      <p class="subtitle">Secure Credential Verification Portal</p>
-
-      <div class="login-divider"></div>
-
-      <div class="input-group">
-        <label>Member Tag ID</label>
-        <input type="text" id="tagInput" placeholder="Enter your Tag ID" autocomplete="off" maxlength="10">
-        <i class="fas fa-id-badge"></i>
-      </div>
-
-      <button class="btn-login" onclick="authenticate()">
-        <i class="fas fa-fingerprint"></i>
-        VERIFY CREDENTIAL
-      </button>
-
-      <div id="loginError" class="login-error hidden">
-        <i class="fas fa-exclamation-triangle"></i>
-        <span>Invalid Tag ID. Access denied.</span>
-      </div>
-
-      <div class="login-footer">
-        <i class="fas fa-lock"></i> Secured by Lions Gate Infrastructure
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ========== VERIFICATION PAGE (QR Scan Result) ========== -->
-<div id="verificationPage" class="hidden">
-  <div class="verification-card">
-    <div class="verification-icon">
-      <i class="fas fa-check"></i>
-    </div>
-    <h2>CREDENTIAL VERIFIED</h2>
-    <p class="verified-label">Member identity confirmed</p>
-
-    <div class="verification-details">
-      <div class="verification-row">
-        <label>Full Name</label>
-        <span id="verifyName">Joan Luiser</span>
-      </div>
-      <div class="verification-row">
-        <label>Tag ID</label>
-        <span id="verifyTag">TG3361</span>
-      </div>
-      <div class="verification-row">
-        <label>Membership Tier</label>
-        <span id="verifyTier" style="color: var(--gold)">VIP ★★</span>
-      </div>
-      <div class="verification-row">
-        <label>Status</label>
-        <span id="verifyStatus" class="status-pending">INACTIVE - PENDING</span>
-      </div>
-      <div class="verification-row">
-        <label>Phone</label>
-        <span id="verifyPhone">+1 (352) 805-8317</span>
-      </div>
-      <div class="verification-row">
-        <label>Email</label>
-        <span id="verifyEmail">joancdy@gmail.com</span>
-      </div>
-      <div class="verification-row">
-        <label>Barcode</label>
-        <span id="verifyBarcode">9800336615890</span>
-      </div>
-      <div class="verification-row">
-        <label>Serial Number</label>
-        <span id="verifySerial">LG-3361-VIP-2024-P</span>
-      </div>
-    </div>
-
-    <p class="verification-timestamp">
-      <i class="fas fa-clock"></i> Verified: <span id="verifyTime"></span>
-    </p>
-
-    <div class="btn-group" style="justify-content: center; margin-top: 24px;">
-      <button class="btn" onclick="goToPortal()">
-        <i class="fas fa-arrow-right"></i> Access Portal
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ========== MAIN PORTAL ========== -->
-<div id="mainPortal" class="hidden">
-  <div class="container">
-
-    <!-- Header -->
-    <div class="header">
-      <div class="logo" id="logo">
-        <h1>LIONS GATE</h1>
-        <small>SECURE CREDENTIAL INFRASTRUCTURE</small>
-      </div>
-      <div class="header-actions">
-        <button class="icon-btn" onclick="exportPDF()" title="Export PDF">
-          <i class="fas fa-file-pdf"></i>
-        </button>
-        <button class="icon-btn" onclick="logout()" title="Logout">
-          <i class="fas fa-sign-out-alt"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- Member Profile -->
-    <div class="card">
-      <h3><i class="fas fa-user-shield"></i> MEMBER CREDENTIAL</h3>
-
-      <div class="profile-section">
-        <div class="profile-photo">
-          <img src="https://pfst.cf2.poecdn.net/base/image/24bb6bc6d5ca1b997296d7ac02b1dd913d9c4872c458611c1856067520425af6?w=1358&h=1428" alt="Joan Luiser" id="memberPhoto">
-        </div>
-
-        <div class="profile-details">
-          <div class="profile-item">
-            <label>Full Name</label>
-            <span>Joan Luiser</span>
-          </div>
-          <div class="profile-item">
-            <label>Membership Tier</label>
-            <span style="color: var(--gold)">VIP ★★</span>
-          </div>
-          <div class="profile-item">
-            <label>Tag ID</label>
-            <span>TG3361</span>
-          </div>
-          <div class="profile-item">
-            <label>Status</label>
-            <span class="status inactive" id="statusBadge">
-              <i class="fas fa-circle"></i> INACTIVE - PENDING
-            </span>
-          </div>
-          <div class="profile-item">
-            <label>Phone</label>
-            <span><a href="tel:+13528058317">+1 (352) 805-8317</a></span>
-          </div>
-          <div class="profile-item">
-            <label>Email</label>
-            <span><a href="mailto:joancdy@gmail.com">joancdy@gmail.com</a></span>
-          </div>
-          <div class="profile-item wide">
-            <label>Corporate Address</label>
-            <span>36750 Daisy Lane, Fruitland Park, FL 34731</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="credential-info">
-        <div class="credential-row">
-          <label>Serial Number</label>
-          <span>LG-3361-VIP-2024-P</span>
-        </div>
-        <div class="credential-row">
-          <label>Barcode Reference</label>
-          <span>9800336615890</span>
-        </div>
-        <div class="credential-row">
-          <label>Issue Date</label>
-          <span id="issueDate"></span>
-        </div>
-        <div class="credential-row">
-          <label>Expiration Date</label>
-          <span id="expDate"></span>
-        </div>
-        <div class="credential-row">
-          <label>Credential Hash (SHA-256)</label>
-          <span class="hash" id="hash"></span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Digital Badge -->
-    <div class="card">
-      <h3><i class="fas fa-id-card"></i> DIGITAL CREDENTIAL</h3>
-
-      <div class="badge-container">
-        <!-- FRONT BADGE -->
-        <div class="badge badge-front">
-          <div class="holo-strip"></div>
-          <div class="badge-inner">
-            <div class="photo-frame">
-              <img src="https://pfst.cf2.poecdn.net/base/image/24bb6bc6d5ca1b997296d7ac02b1dd913d9c4872c458611c1856067520425af6?w=1358&h=1428" alt="Joan Luiser">
+    <canvas id="bg-canvas" aria-hidden="true"></canvas>
+    
+    <!-- Authentication Overlay -->
+    <div class="lock-overlay" id="authOverlay">
+        <div class="auth-container">
+            <div class="text-center mb-4">
+                <h1 class="gold-text playfair mb-2" style="font-size: 2rem;">
+                    <i class="fas fa-shield-alt me-2" aria-hidden="true"></i>SECURE PORTAL
+                </h1>
+                <p class="text-light opacity-75">Diamond Platinum Authentication</p>
             </div>
-            <div class="member-name">JOAN<br>LUISER</div>
-            <div class="tier-badge">VIP <span class="stars">★★</span></div>
-            <div class="tag-id">TG3361</div>
-            <div class="footer-text">Lions Gate · Lions Gate · Lions Gate</div>
-          </div>
-          <div class="lion-emblem">
-            <i class="fas fa-shield-halved"></i>
-          </div>
+            
+            <div class="mb-4">
+                <label for="tagId" class="form-label text-light mb-2 fw-semibold">Enter your unique TAG ID</label>
+                <input type="text" id="tagId" placeholder="e.g. TGXXXX" aria-required="true">
+            </div>
+            
+            <button class="btn-gold w-100 pulse" onclick="authenticate()" aria-label="Verify Access">
+                <i class="fas fa-fingerprint me-2" aria-hidden="true"></i>VERIFY IDENTITY
+            </button>
+        </div>
+    </div>
+    
+    <!-- Full-Screen Inescapable Activation Modal -->
+    <div class="activation-overlay" id="activationOverlay" role="dialog" aria-modal="true" aria-labelledby="activationTitle">
+        
+        <div class="activation-header">
+            <h1 class="activation-title playfair" id="activationTitle">ACTIVATION REQUIRED</h1>
+            <p class="lead text-light opacity-75 max-w-3xl mx-auto">Your Diamond Platinum profile has been located, but requires an active license key to unlock the portal and its exclusive benefits.</p>
         </div>
 
-        <!-- BACK BADGE -->
-        <div class="badge badge-back">
-          <div class="holo-bottom"></div>
-          <div class="badge-inner">
-            <div class="badge-header">
-              <h2>LIONS GATE</h2>
-              <div class="tier">VIP ★★</div>
+        <!-- Action Box for Input and Purchase -->
+        <div class="activation-action-box">
+            <h2 class="h4 gold-text mb-4 playfair">Enter Activation Code</h2>
+            <div class="d-flex flex-column gap-3">
+                <input type="text" id="activationInput" placeholder="XXXX-XXXX-XXXX-XXXX" aria-label="Activation Code" class="text-center" style="letter-spacing: 2px;">
+                <button class="btn-outline-gold py-3" onclick="verifyCode()">
+                    <i class="fas fa-key me-2"></i>Verify Code
+                </button>
+                <div id="activationError" class="error-message" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Invalid or expired activation code. Please purchase a valid code below.
+                </div>
             </div>
 
-            <div class="section-title">Emergency Contact</div>
-            <div class="contact-info">
-              <strong>Joan Luiser</strong>
-              +1 (352) 805-8317<br>
-              joancdy@gmail.com
+            <div class="my-4 d-flex align-items-center">
+                <hr class="flex-grow-1 border-secondary">
+                <span class="mx-3 text-secondary small text-uppercase tracking-widest">OR</span>
+                <hr class="flex-grow-1 border-secondary">
             </div>
 
-            <div class="tag-center">TG3361</div>
-
-            <div class="code-section">
-              <div class="barcode-container">
-                <div class="barcode" id="barcode"></div>
-                <div class="barcode-num">9800336615890</div>
-              </div>
-              <div class="qr-small" id="qrSmall"></div>
+            <h3 class="h5 text-light mb-3">Don't have a code?</h3>
+            <button class="btn-gold w-100 pulse py-3" onclick="purchaseCode()" style="font-size: 1.1rem;">
+                <i class="fas fa-shopping-cart me-2"></i>PURCHASE ACTIVATION CODE ($200)
+            </button>
+            <p class="text-secondary small mt-3 mb-0">One-time fee. Grants lifetime access to all Diamond Platinum benefits.</p>
+        </div>
+        
+        <!-- Benefits Grid -->
+        <div class="activation-grid">
+            <div class="activation-card">
+                <div class="card-icon"><i class="fas fa-film" aria-hidden="true"></i></div>
+                <h3 class="h4 gold-text playfair mb-3">Digital Access</h3>
+                <ul class="benefit-list">
+                    <li>Early digital releases of all Lions Gate films</li>
+                    <li>Exclusive streaming content library</li>
+                    <li>Behind-the-scenes digital content</li>
+                    <li>VIP virtual event access</li>
+                </ul>
             </div>
-
-            <div class="corp-info">
-              <strong>JOAN LUISER · TG3361</strong>
-              +1 (352) 805-8317 · joancdy@gmail.com<br>
-              36750 Daisy Lane<br>
-              Fruitland Park, FL 34731
+            
+            <div class="activation-card">
+                <div class="card-icon"><i class="fas fa-ticket-alt" aria-hidden="true"></i></div>
+                <h3 class="h4 gold-text playfair mb-3">Physical Access</h3>
+                <ul class="benefit-list">
+                    <li>VIP tickets to Lions Gate premieres</li>
+                    <li>Studio tours and set visits</li>
+                    <li>Celebrity meet & greet opportunities</li>
+                    <li>Film festival VIP passes</li>
+                </ul>
             </div>
-          </div>
+            
+            <div class="activation-card">
+                <div class="card-icon"><i class="fas fa-crown" aria-hidden="true"></i></div>
+                <h3 class="h4 gold-text playfair mb-3">Premium Perks</h3>
+                <ul class="benefit-list">
+                    <li>Global travel concierge service</li>
+                    <li>Personalized security detail</li>
+                    <li>Fine dining reservations</li>
+                    <li>Investment opportunities</li>
+                </ul>
+            </div>
         </div>
-      </div>
-
-      <div class="btn-group">
-        <button class="btn" onclick="exportPDF()">
-          <i class="fas fa-file-pdf"></i> Export Watermarked PDF
-        </button>
-        <button class="btn btn-secondary" onclick="downloadCredential()">
-          <i class="fas fa-download"></i> Download Credential
-        </button>
-      </div>
     </div>
 
-    <!-- QR Verification -->
-    <div class="card">
-      <h3><i class="fas fa-qrcode"></i> QR VERIFICATION</h3>
-      <div class="qr-section">
-        <div class="qr-box" id="qrcode"></div>
-      </div>
+    <!-- Main Portal Content (Hidden behind overlays) -->
+    <div class="portal-wrapper container py-5" style="max-width: 1400px; margin: 0 auto;">
+        <!-- Portal content remains visually structured but inaccessible until activated -->
+        <div class="glass-panel p-4 mb-4 d-flex flex-wrap align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge-diamond"><i class="fas fa-crown me-2"></i>DIAMOND PLATINUM</span>
+                <h2 class="h4 mb-0 gold-text playfair">Joan Luiser</h2>
+            </div>
+        </div>
+        <!-- Dummy content to show behind the blur -->
+        <div class="row g-4 opacity-50">
+            <div class="col-lg-8">
+                <div class="glass-panel p-5 h-100">
+                    <h3 class="gold-text mb-4">Dashboard Loading...</h3>
+                    <div class="spinner-border text-warning" role="status"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Specifications -->
-    <div class="card">
-      <h3><i class="fas fa-microchip"></i> PHYSICAL BADGE SPECIFICATIONS</h3>
-      <div class="specs-grid">
-        <div class="spec-item">
-          <i class="fas fa-ruler-combined"></i>
-          <span>CR80 format – 85.60 × 53.98 mm</span>
-        </div>
-        <div class="spec-item">
-          <i class="fas fa-print"></i>
-          <span>600 DPI thermal transfer print</span>
-        </div>
-        <div class="spec-item">
-          <i class="fas fa-layer-group"></i>
-          <span>Polycarbonate/PVC composite</span>
-        </div>
-        <div class="spec-item">
-          <i class="fas fa-sparkles"></i>
-          <span>Holographic security laminate</span>
-        </div>
-        <div class="spec-item">
-          <i class="fas fa-qrcode"></i>
-          <span>QR + EAN-13 barcode</span>
-        </div>
-        <div class="spec-item">
-          <i class="fas fa-shield-halved"></i>
-          <span>UV-reactive microtext overlay</span>
-        </div>
-      </div>
-    </div>
+    <div id="toastArea" aria-live="polite"></div>
 
-    <footer>
-      <div class="logo-text">LIONS GATE CORPORATION</div>
-      Secure Credential Infrastructure · System Generated<br>
-      Document ID: LG-DOC-<span id="docId"></span>
-    </footer>
+    <script>
+        // ------------------- THREE.JS BACKGROUND -------------------
+        const canvas = document.getElementById('bg-canvas');
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-  </div>
-</div>
+        const diamondGeometry = new THREE.ConeGeometry(1, 2, 4, 1);
+        diamondGeometry.rotateX(Math.PI);
+        const diamondMaterial = new THREE.MeshStandardMaterial({ 
+            color: 0xd4af37, emissive: 0x221100, metalness: 0.9, roughness: 0.1 
+        });
+        
+        const diamonds = [];
+        for (let i = 0; i < 20; i++) {
+            const diamond = new THREE.Mesh(diamondGeometry, diamondMaterial);
+            diamond.position.set((Math.random() - 0.5) * 20, (Math.random() - 0.5) * 15, (Math.random() - 0.5) * 20 - 10);
+            diamond.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, 0);
+            const scale = 0.2 + Math.random() * 0.4;
+            diamond.scale.set(scale, scale, scale);
+            scene.add(diamond);
+            diamonds.push({ mesh: diamond, speed: { x: (Math.random()-0.5)*0.02, y: (Math.random()-0.5)*0.02 } });
+        }
 
-<!-- Admin Modal -->
-<div id="adminModal" class="modal hidden">
-  <div class="modal-box">
-    <div id="adminLogin">
-      <h3>ADMIN ACCESS</h3>
-      <label>Username</label>
-      <input id="adminUser" placeholder="Enter username">
-      <label>Password</label>
-      <input id="adminPass" type="password" placeholder="Enter password">
-      <button class="btn" style="width: 100%;" onclick="adminAuth()">
-        <i class="fas fa-lock"></i> Authenticate
-      </button>
-    </div>
+        const ambientLight = new THREE.AmbientLight(0x202030, 1);
+        scene.add(ambientLight);
+        const pointLight1 = new THREE.PointLight(0xd4af37, 1.5, 40);
+        pointLight1.position.set(5, 5, 5);
+        scene.add(pointLight1);
 
-    <div id="adminPanel" class="hidden">
-      <h3>ADMIN CONTROL</h3>
-      <label>Member Status</label>
-      <select id="statusSelect">
-        <option value="INACTIVE - PENDING">INACTIVE - PENDING</option>
-        <option value="ACTIVE">ACTIVE</option>
-        <option value="SUSPENDED">SUSPENDED</option>
-      </select>
-      <div class="btn-group">
-        <button class="btn" onclick="applyStatus()">
-          <i class="fas fa-check"></i> Apply
-        </button>
-        <button class="btn btn-secondary" onclick="closeAdmin()">
-          <i class="fas fa-times"></i> Close
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
+        camera.position.z = 8;
 
-<script>
-/* ========== CREDENTIAL DATA ========== */
-const credential = {
-  name: "Joan Luiser",
-  tier: "VIP ★★",
-  tag: "TG3361",
-  serial: "LG-3361-VIP-2024-P",
-  barcode: "9800336615890",
-  phone: "+1 (352) 805-8317",
-  email: "joancdy@gmail.com",
-  address: "36750 Daisy Lane, Fruitland Park, FL 34731",
-  status: "INACTIVE - PENDING",
-  issueDate: new Date(),
-  expDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-};
+        function animate() {
+            requestAnimationFrame(animate);
+            diamonds.forEach(d => {
+                d.mesh.rotation.x += d.speed.x;
+                d.mesh.rotation.y += d.speed.y;
+                d.mesh.position.y += Math.sin(Date.now() * 0.001 + d.mesh.id) * 0.002;
+            });
+            renderer.render(scene, camera);
+        }
+        animate();
 
-/* Generate verification URL for QR */
-function getVerificationURL() {
-  const baseURL = window.location.href.split('?')[0].split('#')[0];
-  const params = new URLSearchParams({
-    verify: 'true',
-    tag: credential.tag,
-    name: credential.name,
-    tier: 'VIP ★★',
-    status: credential.status,
-    barcode: credential.barcode,
-    serial: credential.serial,
-    phone: credential.phone,
-    email: credential.email,
-    ts: Date.now()
-  });
-  return baseURL + '?' + params.toString();
-}
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
 
-/* Check URL params on load for verification page */
-function checkVerificationMode() {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('verify') === 'true') {
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('verificationPage').classList.remove('hidden');
-    document.getElementById('verifyTime').textContent = new Date().toLocaleString();
+        // ------------------- LOGIC -------------------
+        function showToast(msg) {
+            const area = document.getElementById('toastArea');
+            const toast = document.createElement('div');
+            toast.className = 'toast-message';
+            toast.innerHTML = msg;
+            area.appendChild(toast);
+            setTimeout(() => toast.remove(), 4000);
+        }
 
-    // Populate verification details from URL params
-    if (params.get('name')) document.getElementById('verifyName').textContent = params.get('name');
-    if (params.get('tag')) document.getElementById('verifyTag').textContent = params.get('tag');
-    if (params.get('tier')) document.getElementById('verifyTier').textContent = params.get('tier');
-    if (params.get('status')) {
-      const statusEl = document.getElementById('verifyStatus');
-      const status = params.get('status');
-      statusEl.textContent = status;
-      if (status === 'ACTIVE') {
-        statusEl.className = 'status-active';
-      } else if (status === 'SUSPENDED') {
-        statusEl.className = 'status-suspended';
-        statusEl.style.color = 'var(--red)';
-      } else {
-        statusEl.className = 'status-pending';
-      }
-    }
-    if (params.get('phone')) document.getElementById('verifyPhone').textContent = params.get('phone');
-    if (params.get('email')) document.getElementById('verifyEmail').textContent = params.get('email');
-    if (params.get('barcode')) document.getElementById('verifyBarcode').textContent = params.get('barcode');
-    if (params.get('serial')) document.getElementById('verifySerial').textContent = params.get('serial');
-  }
-}
+        function authenticate() {
+            const tagId = document.getElementById('tagId').value.trim().toUpperCase();
+            if (tagId === 'TG3361') {
+                document.getElementById('authOverlay').style.display = 'none';
+                // Show the inescapable activation modal
+                document.getElementById('activationOverlay').classList.add('active');
+                showToast('<i class="fas fa-check-circle me-2"></i> Identity verified. Activation required.');
+            } else {
+                showToast('<i class="fas fa-times-circle me-2" style="color:var(--error-red)"></i> Invalid TAG ID.');
+                const input = document.getElementById('tagId');
+                input.style.borderColor = 'var(--error-red)';
+                setTimeout(() => input.style.borderColor = '', 2000);
+            }
+        }
 
-/* ========== AUTHENTICATION ========== */
-function authenticate() {
-  const input = document.getElementById('tagInput').value.trim().toUpperCase();
-  const error = document.getElementById('loginError');
+        function verifyCode() {
+            const input = document.getElementById('activationInput').value.trim();
+            const errorMsg = document.getElementById('activationError');
+            
+            if(input === "") {
+                errorMsg.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Please enter a code.';
+            } else {
+                // ALWAYS show error as requested
+                errorMsg.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Invalid or expired activation code. Please purchase a valid code below.';
+            }
+            
+            errorMsg.style.display = 'block';
+            
+            // Reset animation to allow re-triggering
+            errorMsg.style.animation = 'none';
+            errorMsg.offsetHeight; /* trigger reflow */
+            errorMsg.style.animation = null;
+        }
 
-  if (input === 'TG3361') {
-    error.classList.add('hidden');
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('mainPortal').classList.remove('hidden');
-    initializePortal();
-  } else {
-    error.classList.remove('hidden');
-    document.getElementById('tagInput').style.borderColor = 'var(--red)';
-    setTimeout(() => {
-      document.getElementById('tagInput').style.borderColor = '';
-    }, 2500);
-  }
-}
+        function purchaseCode() {
+            // Open email client with prefilled message
+            const subject = encodeURIComponent('Purchase Diamond Platinum Activation Code - TG3361');
+            const body = encodeURIComponent('Dear Lions Gate Billing Department,\n\nI would like to purchase an activation code for my Diamond Platinum membership.\n\n---\nPortal ID: TG3361\nAccount Name: Joan Luiser\nRequested Item: Lifetime Activation Code ($200)\n---\n\nPlease provide the secure payment link or instructions to complete this transaction.\n\nSincerely,\nJoan Luiser');
+            
+            window.location.href = `mailto:org.lionsgate@gmail.com?subject=${subject}&body=${body}`;
+            
+            showToast('<i class="fas fa-envelope me-2"></i> Redirecting to secure email client...');
+            // Note: The modal remains active and inescapable.
+        }
 
-function goToPortal() {
-  window.location.href = window.location.href.split('?')[0];
-}
-
-function logout() {
-  document.getElementById('mainPortal').classList.add('hidden');
-  document.getElementById('loginScreen').classList.remove('hidden');
-  document.getElementById('tagInput').value = '';
-}
-
-/* Enter key support */
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('tagInput').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') authenticate();
-  });
-  checkVerificationMode();
-});
-
-/* ========== PORTAL INITIALIZATION ========== */
-function initializePortal() {
-  generateHash();
-  generateQR();
-  generateBarcode();
-  setDates();
-  generateDocId();
-}
-
-/* SHA-256 Hash */
-async function generateHash() {
-  const data = `${credential.name}|${credential.tag}|${credential.serial}|${credential.barcode}|${credential.status}|${credential.issueDate.toISOString()}`;
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data));
-  const hash = [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
-  document.getElementById('hash').textContent = hash;
-}
-
-/* QR Codes */
-function generateQR() {
-  const verifyURL = getVerificationURL();
-
-  // Main QR with verification URL
-  const qrContainer = document.getElementById('qrcode');
-  qrContainer.innerHTML = '';
-  new QRCode(qrContainer, {
-    text: verifyURL,
-    width: 160,
-    height: 160,
-    colorDark: '#000000',
-    colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.M
-  });
-
-  // Small QR on badge
-  const qrSmall = document.getElementById('qrSmall');
-  qrSmall.innerHTML = '';
-  new QRCode(qrSmall, {
-    text: verifyURL,
-    width: 50,
-    height: 50,
-    colorDark: '#000000',
-    colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.L
-  });
-}
-
-/* Barcode */
-function generateBarcode() {
-  const barcode = document.getElementById('barcode');
-  barcode.innerHTML = '';
-  // EAN-13 style pattern
-  const pattern = '101001001101101001001101101001001001101101001001001101001101001001101001001001101101001001101001001';
-
-  for (let i = 0; i < pattern.length; i++) {
-    const bar = document.createElement('span');
-    bar.style.opacity = pattern[i] === '1' ? '1' : '0';
-    barcode.appendChild(bar);
-  }
-}
-
-/* Dates */
-function setDates() {
-  const options = { year: 'numeric', month: 'long', day: 'numeric' };
-  document.getElementById('issueDate').textContent = credential.issueDate.toLocaleDateString('en-US', options);
-  document.getElementById('expDate').textContent = credential.expDate.toLocaleDateString('en-US', options);
-}
-
-/* Document ID */
-function generateDocId() {
-  const id = Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 6).toUpperCase();
-  document.getElementById('docId').textContent = id;
-}
-
-/* ========== PDF EXPORT ========== */
-function exportPDF() {
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF();
-
-  // Header
-  pdf.setFillColor(11, 11, 13);
-  pdf.rect(0, 0, 210, 50, 'F');
-
-  pdf.setTextColor(201, 162, 77);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(32);
-  pdf.text('LIONS GATE', 20, 30);
-
-  pdf.setTextColor(120, 120, 130);
-  pdf.setFontSize(10);
-  pdf.text('SECURE CREDENTIAL INFRASTRUCTURE', 20, 40);
-
-  // Content
-  pdf.setTextColor(40);
-  pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(14);
-  pdf.text('MEMBER CREDENTIAL', 20, 65);
-
-  pdf.setDrawColor(201, 162, 77);
-  pdf.setLineWidth(0.5);
-  pdf.line(20, 68, 85, 68);
-
-  pdf.setFontSize(11);
-  const details = [
-    ['Name:', credential.name],
-    ['Tier:', 'VIP ★★'],
-    ['Tag ID:', credential.tag],
-    ['Status:', credential.status],
-    ['Serial:', credential.serial],
-    ['Barcode:', credential.barcode],
-    ['Phone:', credential.phone],
-    ['Email:', credential.email],
-    ['Address:', credential.address],
-    ['Issue Date:', credential.issueDate.toLocaleDateString()],
-    ['Expiration:', credential.expDate.toLocaleDateString()]
-  ];
-
-  let y = 80;
-  details.forEach(([label, value]) => {
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(100);
-    pdf.text(label, 20, y);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(30);
-    pdf.text(String(value), 60, y);
-    y += 8;
-  });
-
-  // Watermark
-  pdf.setTextColor(235, 235, 235);
-  pdf.setFontSize(55);
-  pdf.text('CONFIDENTIAL', 105, 200, { align: 'center', angle: 45 });
-
-  // Footer
-  pdf.setTextColor(120, 120, 130);
-  pdf.setFontSize(8);
-  pdf.text('This document is system-generated and confidential.', 105, 275, { align: 'center' });
-  pdf.text('Lions Gate Corporation · Secure Credential Infrastructure', 105, 280, { align: 'center' });
-  pdf.text('Generated: ' + new Date().toLocaleString(), 105, 285, { align: 'center' });
-
-  pdf.save('LionsGate_' + credential.name.replace(' ', '_') + '_Credential.pdf');
-}
-
-/* Download Credential */
-function downloadCredential() {
-  const data = `
-╔═══════════════════════════════════════════════════════════════════╗
-║                      LIONS GATE CORPORATION                       ║
-║                    DIGITAL CREDENTIAL RECORD                      ║
-╠═══════════════════════════════════════════════════════════════════╣
-
-  MEMBER INFORMATION
-  ══════════════════
-  Full Name:        ${credential.name}
-  Membership Tier:  ${credential.tier}
-  Tag ID:           ${credential.tag}
-  Status:           ${credential.status}
-
-  CONTACT DETAILS
-  ═══════════════
-  Phone:            ${credential.phone}
-  Email:            ${credential.email}
-
-  CORPORATE ADDRESS
-  ═════════════════
-  ${credential.address}
-
-  CREDENTIAL METADATA
-  ═══════════════════
-  Serial Number:    ${credential.serial}
-  Barcode:          ${credential.barcode}
-  Issue Date:       ${credential.issueDate.toLocaleDateString()}
-  Expiration:       ${credential.expDate.toLocaleDateString()}
-
-  VERIFICATION
-  ════════════
-  QR Data:          ${getVerificationURL()}
-
-╠═══════════════════════════════════════════════════════════════════╣
-║  This credential is system-issued and non-transferable.          ║
-║  Unauthorized reproduction is strictly prohibited.               ║
-╠═══════════════════════════════════════════════════════════════════╣
-║  Generated: ${new Date().toLocaleString().padEnd(45)}     ║
-╚═══════════════════════════════════════════════════════════════════╝
-`;
-
-  const blob = new Blob([data], { type: 'text/plain' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'LionsGate_' + credential.name.replace(' ', '_') + '_Credential.txt';
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-/* ========== ADMIN ACCESS ========== */
-let clicks = 0;
-document.getElementById('logo').onclick = () => {
-  clicks++;
-  setTimeout(() => clicks = 0, 1000);
-  if (clicks === 3) {
-    document.getElementById('adminModal').classList.remove('hidden');
-  }
-};
-
-function adminAuth() {
-  if (document.getElementById('adminUser').value === 'admin' &&
-      document.getElementById('adminPass').value === 'admin111') {
-    document.getElementById('adminLogin').classList.add('hidden');
-    document.getElementById('adminPanel').classList.remove('hidden');
-  }
-}
-
-function applyStatus() {
-  credential.status = document.getElementById('statusSelect').value;
-  const badge = document.getElementById('statusBadge');
-  badge.innerHTML = '<i class="fas fa-circle"></i> ' + credential.status;
-
-  if (credential.status === 'ACTIVE') {
-    badge.className = 'status active';
-  } else if (credential.status === 'SUSPENDED') {
-    badge.className = 'status suspended';
-  } else {
-    badge.className = 'status inactive';
-  }
-
-  generateHash();
-  generateQR();
-}
-
-function closeAdmin() {
-  document.getElementById('adminModal').classList.add('hidden');
-  document.getElementById('adminLogin').classList.remove('hidden');
-  document.getElementById('adminPanel').classList.add('hidden');
-  document.getElementById('adminUser').value = '';
-  document.getElementById('adminPass').value = '';
-}
-</script>
-
+        // Prevent closing modal via escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape" && document.getElementById('activationOverlay').classList.contains('active')) {
+                event.preventDefault();
+                showToast('<i class="fas fa-lock me-2"></i> Activation is required to proceed.');
+            }
+        });
+    </script>
 </body>
 </html>
